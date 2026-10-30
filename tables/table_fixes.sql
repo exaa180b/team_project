@@ -15,4 +15,10 @@ CREATE TABLE song_artist (
     PRIMARY KEY (song_id, artist_id),
     UNIQUE (song_id, artist_position)
 );
+
+
+-- Spotify popularity (0-100) and explicit flag, filled by data/load_spotify_tracks.sql.
+-- NULL for hand-entered songs that aren't in the dataset.
+ALTER TABLE song ADD COLUMN IF NOT EXISTS popularity SMALLINT CHECK (popularity BETWEEN 0 AND 100);
+ALTER TABLE song ADD COLUMN IF NOT EXISTS explicit   BOOLEAN;
  
