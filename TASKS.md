@@ -26,14 +26,17 @@ output*, and a README covering setup, execution, dependencies and testing.
 
 ## 1. Data volume: ≥1,000 rows per major table (required)
 
-**DONE locally (2026-10-29):** `data/load_spotify_tracks.sql` (3,012 real tracks, popularity ≥ 70,
-from `data/source/spotify_tracks_pop70.csv`) + `data/generate_activity.sql` (deterministic, fixed
-"now" = 2026-10-01 LA time). Run order: tables/table_creation → tables/table_fixes → data/data_inserts
-→ data/load_spotify_tracks → data/generate_activity (~40s total). Result: 1,891 artists, 2,446 albums,
-3,082 songs, 21 genres, 2,000 users, 5,040 playlists, 80,544 playlist_song, 1,551 collaborators,
-49,149 likes, 999,996 plays; ~100 MB. Verified invariants and that re-runs are identical.
-`song` gained `popularity` and `explicit` columns (table_fixes.sql). The old 100k-play generator
-in data_inserts.sql was removed. Applied to Supabase 2026-10-29 (identical data, 93 MB). Not yet committed.
+**DONE.** Simplified 2026-11-02 to match Ehsan's plain `INSERT ... VALUES` style:
+- `data/data_inserts.sql`: Ehsan's file. Only changes: `cover_url` on album rows, `spotify_id` and
+  `popularity` on song rows, and his listening-history block uses a fixed date instead of now().
+- `data/spotify_inserts.sql`: ~2,940 real Spotify songs (popularity ≥ 70, from
+  `data/source/spotify_tracks_pop70.csv`) in the same format with explicit ids, plus 9 more genres.
+- `data/generate_activity.sql`: random users 5–2000, 900k plays, likes, playlists 13–5012,
+  playlist songs, collaborators (INSERT ... SELECT with generate_series + random(), setseed for repeatability).
+Run order: tables/table_creation → table_fixes → data/data_inserts → spotify_inserts →
+generate_activity (~22s). Result: 1,891 artists, 2,446 albums, 3,082 songs, 21 genres, 2,000 users,
+5,012 playlists, 79,454 playlist_song, 1,503 collaborators, 49,498 likes, 1,000,000 plays.
+Supabase still has the older load (fc7e15e); rebuild with scripts/reset_db.py after the team agrees.
 The notes below are the original plan.
 
 Current (verified by loading into Postgres 18, 2026-10-29): listening_history 100k (25k each for

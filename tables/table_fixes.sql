@@ -17,8 +17,9 @@ CREATE TABLE song_artist (
 );
 
 
--- Spotify popularity (0-100) and explicit flag, filled by data/load_spotify_tracks.sql.
--- NULL for hand-entered songs that aren't in the dataset.
-ALTER TABLE song ADD COLUMN IF NOT EXISTS popularity SMALLINT CHECK (popularity BETWEEN 0 AND 100);
-ALTER TABLE song ADD COLUMN IF NOT EXISTS explicit   BOOLEAN;
- 
+-- Spotify popularity score (0-100). NULL for hand-entered songs that aren't on Spotify's list.
+ALTER TABLE song ADD COLUMN popularity INTEGER CHECK (popularity BETWEEN 0 AND 100);
+
+
+-- Album cover image link (from Spotify).
+ALTER TABLE album ADD COLUMN cover_url TEXT;
