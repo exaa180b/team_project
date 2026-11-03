@@ -29,11 +29,12 @@ output*, and a README covering setup, execution, dependencies and testing.
 **DONE.** Simplified 2026-11-02 to match Ehsan's plain `INSERT ... VALUES` style:
 - `data/data_inserts.sql`: Ehsan's file. Only changes: `cover_url` on album rows, `spotify_id` and
   `popularity` on song rows, and his listening-history block uses a fixed date instead of now().
-- `data/spotify_inserts.sql`: ~2,940 real Spotify songs (popularity ≥ 70, from
-  `data/source/spotify_tracks_pop70.csv`) in the same format with explicit ids, plus 9 more genres.
+- `data/clean_spotify_data.py` turns `data/source/spotify_tracks_pop70.csv` (~2,940 new real songs,
+  popularity ≥ 70) into one clean CSV per table in `data/spotify/` (ids continue after data_inserts.sql,
+  Spotify tags grouped into broad genres). `data/load_spotify_data.sql` loads them with `\copy`.
 - `data/generate_activity.sql`: random users 5–2000, 900k plays, likes, playlists 13–5012,
   playlist songs, collaborators (INSERT ... SELECT with generate_series + random(), setseed for repeatability).
-Run order: tables/table_creation → table_fixes → data/data_inserts → spotify_inserts →
+Run order: tables/table_creation → table_fixes → data/data_inserts → load_spotify_data →
 generate_activity (~22s). Result: 1,891 artists, 2,446 albums, 3,082 songs, 21 genres, 2,000 users,
 5,012 playlists, 79,454 playlist_song, 1,503 collaborators, 49,498 likes, 1,000,000 plays.
 Supabase still has the older load (fc7e15e); rebuild with scripts/reset_db.py after the team agrees.

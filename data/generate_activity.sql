@@ -1,5 +1,5 @@
 -- Random users, playlists, likes and plays, so every table has 1,000+ rows.
--- Run after data_inserts.sql and spotify_inserts.sql.
+-- Run after data_inserts.sql and load_spotify_data.sql.
 --
 -- setseed makes random() return the same numbers every time, so reloading gives the same data.
 SELECT setseed(0.18);
