@@ -1,7 +1,6 @@
 """Turn the raw Spotify CSV into one clean CSV per table, ready for \\copy.
 
 Reads  data/source/spotify_tracks_pop70.csv  (Spotify tracks with popularity >= 70)
-       data/source/album_covers.csv          (album cover links, from fetch_album_covers.py)
        data/data_inserts.sql                 (the hand-entered catalog, so we don't add it twice)
 Writes data/spotify/genres.csv, artists.csv, albums.csv, songs.csv, song_artist.csv, song_genre.csv
 
@@ -106,8 +105,6 @@ def main():
 
     with open("data/source/spotify_tracks_pop70.csv", encoding="utf-8") as f:
         tracks = [t for t in csv.DictReader(f) if t["spotify_id"] not in existing_songs]
-    with open("data/source/album_covers.csv", encoding="utf-8") as f:
-        covers = {row["spotify_id"]: row["cover_url"] for row in csv.DictReader(f)}
 
     # Artist names for each track, in credit order, without repeats.
     for t in tracks:
@@ -115,17 +112,13 @@ def main():
         t["artist_names"] = list(dict.fromkeys(names))
 
     # New artists get the next ids, in alphabetical order.
-    new_artists = sorted({n for t in tracks for n in t["artist_names"]} - artist_ids.keys(), key=str.lower)
+    new_artists = sorted({n for t in tracks for n in t["artist_names"]} - artist_ids.keys(), key=lambda n: (n.lower(), n))
     for i, name in enumerate(new_artists, start=first_new_artist):
         artist_ids[name] = i
 
     # Albums belong to the track's main (first) artist.
-    album_covers = {}
     for t in tracks:
-        key = (artist_ids[t["artist_names"][0]], t["album_name"])
-        t["album_key"] = key
-        if t["spotify_id"] in covers:
-            album_covers.setdefault(key, covers[t["spotify_id"]])
+        t["album_key"] = (artist_ids[t["artist_names"][0]], t["album_name"])
     new_albums = sorted({t["album_key"] for t in tracks} - album_ids.keys())
     for i, key in enumerate(new_albums, start=first_new_album):
         album_ids[key] = i
@@ -146,8 +139,8 @@ def main():
               [(genre_ids[g], g) for g in new_genres])
     write_csv("artists.csv", ["artist_id", "artist_name"],
               [(artist_ids[n], n) for n in new_artists])
-    write_csv("albums.csv", ["album_id", "artist_id", "album_title", "cover_url"],
-              [(album_ids[key], key[0], key[1], album_covers.get(key)) for key in new_albums])
+    write_csv("albums.csv", ["album_id", "artist_id", "album_title"],
+              [(album_ids[key], key[0], key[1]) for key in new_albums])
     write_csv("songs.csv", ["song_id", "album_id", "song_title", "duration_ms", "spotify_id", "popularity"],
               [(t["song_id"], album_ids[t["album_key"]], t["track_name"], t["duration_ms"],
                 t["spotify_id"], t["popularity"]) for t in tracks])

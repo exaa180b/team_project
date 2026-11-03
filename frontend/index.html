@@ -1,2 +1,63 @@
-<!-- this is the main html file for the frontend -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home · EXAAtunes</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/">EXAAtunes</a>
+    <nav>
+      <a href="/" class="active">Home</a>
+      <a href="/sql.html">SQL Console</a>
+    </nav>
+    <label class="user-picker">Viewing as <select id="user-select"></select></label>
+  </aside>
 
+  <main>
+    <header class="page-header">
+      <h1>Home</h1>
+      <p id="stats" class="muted">&nbsp;</p>
+    </header>
+
+    <section>
+      <h2>Recently played</h2>
+      <ol id="recent" class="track-list"></ol>
+    </section>
+
+    <div class="two-col">
+      <section>
+        <h2>Top artists <span class="muted">· last 30 days</span></h2>
+        <ol id="top-artists" class="rank-list"></ol>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Your playlists</h2>
+          <button id="new-playlist-button">New playlist</button>
+        </div>
+        <form id="new-playlist-form" class="inline-form" hidden>
+          <input type="text" name="name" placeholder="Playlist name" maxlength="100" required>
+          <input type="text" name="description" placeholder="Description (optional)" maxlength="300">
+          <div class="actions">
+            <button type="submit" class="primary">Create</button>
+            <button type="button" id="cancel-new-playlist">Cancel</button>
+          </div>
+        </form>
+        <ul id="playlists" class="plain-list"></ul>
+      </section>
+    </div>
+
+    <section id="sql-panel" class="sql-panel">
+      <h2>SQL <span class="muted sql-summary"></span></h2>
+      <div class="sql-list"></div>
+    </section>
+  </main>
+
+  <div id="message" class="message" hidden></div>
+  <script src="/js/common.js"></script>
+  <script src="/js/home.js"></script>
+</body>
+</html>

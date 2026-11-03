@@ -1,4 +1,8 @@
 # Environment variables
-.env 
-.vscode/ 
-.cursor/ 
+.env
+.vscode/
+.cursor/
+
+# Python
+.venv/
+__pycache__/

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playlist · EXAAtunes</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/">EXAAtunes</a>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/sql.html">SQL Console</a>
+    </nav>
+    <label class="user-picker">Viewing as <select id="user-select"></select></label>
+  </aside>
+
+  <main>
+    <header id="playlist-header" class="playlist-header"></header>
+
+    <form id="edit-form" class="inline-form" hidden>
+      <input type="text" name="name" placeholder="Playlist name" maxlength="100" required>
+      <input type="text" name="description" placeholder="Description (optional)" maxlength="300">
+      <div class="actions">
+        <button type="submit" class="primary">Save</button>
+        <button type="button" id="cancel-edit">Cancel</button>
+      </div>
+    </form>
+
+    <section>
+      <ol id="songs" class="track-list"></ol>
+    </section>
+
+    <section id="sql-panel" class="sql-panel">
+      <h2>SQL <span class="muted sql-summary"></span></h2>
+      <div class="sql-list"></div>
+    </section>
+  </main>
+
+  <div id="message" class="message" hidden></div>
+  <script src="/js/common.js"></script>
+  <script src="/js/playlist.js"></script>
+</body>
+</html>

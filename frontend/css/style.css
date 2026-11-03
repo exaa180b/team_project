@@ -1,0 +1,233 @@
+/* EXAAtunes styles. Dark theme with a Spotify-style green accent; colors live in the variables below. */
+
+:root {
+  color-scheme: dark;        /* dark scrollbars, checkboxes and dropdowns */
+  --bg: #121212;
+  --sidebar-bg: #000000;
+  --surface: #1e1e1e;
+  --text: #f2f2f2;
+  --muted: #a7a7a7;
+  --line: #2a2a2a;
+  --hover: #1f1f1f;
+  --accent: #1db954;
+  --accent-text: #000000;
+  --danger: #f15e6c;
+  --radius: 6px;
+  --sidebar-width: 220px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }   /* so display rules below never un-hide things */
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1 { font-size: 26px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; color: var(--accent); }
+
+.muted { color: var(--muted); }
+
+/* ---------- Layout ---------- */
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-width);
+  padding: 22px 16px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.brand { font-weight: 700; font-size: 16px; padding: 0 8px; color: var(--accent); }
+.brand:hover { text-decoration: none; }
+
+.sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+.sidebar nav a { padding: 6px 8px; border-radius: var(--radius); color: var(--muted); }
+.sidebar nav a:hover { background: var(--hover); color: var(--text); text-decoration: none; }
+.sidebar nav a.active { color: var(--accent); font-weight: 600; }
+
+.user-picker { margin-top: auto; display: flex; flex-direction: column; gap: 4px; padding: 0 8px; font-size: 12px; color: var(--muted); }
+
+main {
+  margin-left: var(--sidebar-width);
+  padding: 32px 40px 48px;
+  max-width: calc(var(--sidebar-width) + 1000px);
+}
+
+.page-header { margin-bottom: 28px; }
+.page-header p { margin: 6px 0 0; }
+
+section { margin-bottom: 36px; }
+
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+
+
+/* ---------- Controls ---------- */
+
+button, select, input, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button, .button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 5px 11px;
+  cursor: pointer;
+}
+button:hover, .button:hover { background: var(--hover); text-decoration: none; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+button.primary:hover { filter: brightness(1.08); }
+button.danger { color: var(--danger); }
+button:disabled { opacity: 0.5; cursor: default; }
+
+.icon-button { border: 0; padding: 4px; color: var(--muted); line-height: 0; }
+.icon-button:hover { color: var(--text); background: transparent; }
+.icon-button svg { width: 16px; height: 16px; }
+.like[aria-pressed="true"] { color: var(--accent); }
+
+select, input[type="text"], textarea {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+}
+input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.inline-form { display: flex; flex-direction: column; gap: 8px; max-width: 420px; margin: 0 0 16px; }
+.inline-form .actions { display: flex; gap: 8px; }
+
+/* ---------- Track list ---------- */
+
+.track-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+
+.track {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--line);
+}
+.track:hover { background: var(--hover); }
+.track.numbered { grid-template-columns: 24px minmax(0, 2fr) minmax(0, 1.4fr) auto auto; }
+
+.track .num { color: var(--muted); text-align: right; }
+.track .info { min-width: 0; }
+.track .title { font-weight: 500; }
+.track .title, .track .artists, .track .album { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track .artists, .track .album, .track .meta { color: var(--muted); }
+.track .meta { font-size: 13px; text-align: right; white-space: nowrap; }
+.track .actions { display: flex; align-items: center; gap: 4px; }
+.track .actions select { font-size: 12px; padding: 3px 4px; max-width: 150px; color: var(--muted); }
+
+.empty { color: var(--muted); padding: 14px 6px; }
+
+/* ---------- Simple lists ---------- */
+
+.rank-list, .plain-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.rank-list li, .plain-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line);
+}
+.rank-list .rank { width: 18px; color: var(--muted); text-align: right; }
+.rank-list .name, .plain-list .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-list .count, .plain-list .count { color: var(--muted); font-size: 13px; }
+
+/* ---------- Playlist header ---------- */
+
+.playlist-header { display: flex; gap: 24px; align-items: flex-end; margin-bottom: 28px; }
+.playlist-header .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.playlist-header .description { margin: 6px 0 0; color: var(--muted); }
+.playlist-header .meta { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.playlist-header .buttons { display: flex; gap: 8px; margin-top: 14px; }
+
+/* ---------- SQL panel ---------- */
+
+.sql-panel { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 16px; }
+.sql-entry { margin-top: 14px; }
+.sql-entry .sql-meta { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.sql-entry pre {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font: 12px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  overflow-x: auto;
+}
+
+/* ---------- SQL Console page ---------- */
+
+.sql-form { display: flex; flex-direction: column; gap: 10px; }
+.sql-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: 13px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  resize: vertical;
+}
+.sql-actions { display: flex; align-items: center; gap: 16px; }
+.sql-actions button { padding: 6px 20px; font-weight: 600; }
+.checkbox { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+
+.sql-status { margin: 18px 0 6px; font-size: 13px; color: var(--muted); }
+.sql-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  color: var(--danger);
+  font: 12px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+.result-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.result-table th, .result-table td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.result-table th { color: var(--accent); font-weight: 600; background: var(--surface); }
+.result-table tbody tr:hover { background: var(--hover); }
+.result-table tbody tr:last-child td { border-bottom: 0; }
+
+/* ---------- Message ---------- */
+
+.message {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+.message.error { background: var(--danger); color: #fff; }
+
+/* ---------- Small screens (kept last so it overrides the rules above) ---------- */
+@media (max-width: 800px) {
+  .sidebar { position: static; width: auto; flex-direction: row; flex-wrap: wrap; align-items: center; border-right: 0; border-bottom: 1px solid var(--line); padding: 12px 16px; gap: 12px; }
+  .sidebar nav { flex-direction: row; }
+  .user-picker { margin: 0 0 0 auto; flex-direction: row; align-items: center; }
+  main { margin-left: 0; padding: 20px 16px 40px; }
+  .two-col { grid-template-columns: 1fr; gap: 0; }
+  .track .album, .track .added { display: none; }
+  .track { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .track.numbered { grid-template-columns: 24px minmax(0, 1fr) auto auto; }
+}

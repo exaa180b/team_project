@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SQL Console · EXAAtunes</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/">EXAAtunes</a>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/sql.html" class="active">SQL Console</a>
+    </nav>
+    <label class="user-picker">Viewing as <select id="user-select"></select></label>
+  </aside>
+
+  <main>
+    <header class="page-header">
+      <h1>SQL Console</h1>
+      <p class="muted">Run any query against the database. Ctrl+Enter runs it.</p>
+    </header>
+
+    <section>
+      <form id="sql-form" class="sql-form">
+        <textarea id="sql-input" name="sql" rows="10" spellcheck="false"
+                  placeholder="SELECT song_title, popularity FROM song ORDER BY popularity DESC LIMIT 10;"></textarea>
+        <div class="sql-actions">
+          <button type="submit" class="primary">Run</button>
+          <label class="checkbox">
+            <input type="checkbox" name="allow_changes">
+            Allow changes (INSERT, UPDATE, DELETE, ...)
+          </label>
+        </div>
+      </form>
+    </section>
+
+    <section id="sql-results"></section>
+  </main>
+
+  <div id="message" class="message" hidden></div>
+  <script src="/js/common.js"></script>
+  <script src="/js/sql.js"></script>
+</body>
+</html>

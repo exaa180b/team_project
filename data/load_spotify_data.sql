@@ -7,7 +7,7 @@
 
 \copy genre       (genre_id, genre_name)                                           FROM 'data/spotify/genres.csv'      WITH (FORMAT csv, HEADER true, ENCODING 'UTF8')
 \copy artist      (artist_id, artist_name)                                         FROM 'data/spotify/artists.csv'     WITH (FORMAT csv, HEADER true, ENCODING 'UTF8')
-\copy album       (album_id, artist_id, album_title, cover_url)                    FROM 'data/spotify/albums.csv'      WITH (FORMAT csv, HEADER true, ENCODING 'UTF8')
+\copy album       (album_id, artist_id, album_title)                               FROM 'data/spotify/albums.csv'      WITH (FORMAT csv, HEADER true, ENCODING 'UTF8')
 \copy song        (song_id, album_id, song_title, duration_ms, spotify_id, popularity) FROM 'data/spotify/songs.csv'   WITH (FORMAT csv, HEADER true, ENCODING 'UTF8')
 \copy song_artist (song_id, artist_id, artist_position)                            FROM 'data/spotify/song_artist.csv' WITH (FORMAT csv, HEADER true, ENCODING 'UTF8')
 \copy song_genre  (song_id, genre_id)                                              FROM 'data/spotify/song_genre.csv'  WITH (FORMAT csv, HEADER true, ENCODING 'UTF8')
