@@ -35,13 +35,13 @@ frontend/                    web pages (plain HTML, CSS, JavaScript)
 ## Building the database
 
 You need `psql`, which comes with [PostgreSQL](https://www.postgresql.org/download/).
-
+'''
 From the repo root run these commands:
 psql "<DATABASE_URL>" -f tables/table_creation.sql
 psql "<DATABASE_URL>" -f data/load_spotify_data.sql
 psql "<DATABASE_URL>" -f data/demo_users.sql
 psql "<DATABASE_URL>" -f data/generate_activity.sql
-
+'''
 `<DATABASE_URL>` is the connection string (for Supabase: Project → Connect →
 "Session pooler").
 
