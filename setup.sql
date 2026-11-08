@@ -11,6 +11,6 @@ SET statement_timeout = 0;   -- Supabase stops queries after 2 minutes by defaul
 SET timezone = 'UTC';        -- so the random dates come out the same on every computer
 
 \i tables/table_creation.sql
-\i data/data_inserts.sql
 \i data/load_spotify_data.sql
+\i data/demo_users.sql
 \i data/generate_activity.sql

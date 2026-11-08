@@ -11,7 +11,7 @@ with a small web app on top for the demo.
 |---|---|---|
 | artist, album, song | 1,891 / 2,446 / 3,082 | 142 hand-entered songs + real Spotify songs with popularity 70+ ([Spotify Tracks Dataset](https://huggingface.co/datasets/maharshipandya/spotify-tracks-dataset)) |
 | genre, song_genre, song_artist | 21 / 3,932 / 4,231 | Same |
-| app_user | 2,000 | 4 hand-made demo users + 1,996 random ones |
+| app_user | 4 | demo users |
 | playlist, playlist_song, playlist_collaborator | 5,012 / 79,454 / 1,503 | Hand-made + random |
 | liked_song | 49,498 | Hand-made + random |
 | listening_history | 1,000,000 | Random (Oct 2025 – Oct 2026) |
