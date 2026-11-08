@@ -26,6 +26,3 @@ VALUES
   (2, 2),
   (4, 3),
   (12, 1);
-
-SELECT setval(pg_get_serial_sequence('app_user', 'user_id'), (SELECT max(user_id) FROM app_user));
-SELECT setval(pg_get_serial_sequence('playlist', 'playlist_id'), (SELECT max(playlist_id) FROM playlist));
