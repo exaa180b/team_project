@@ -21,7 +21,6 @@ The random data uses a fixed seed, so rebuilding always gives the same rows.
 ## Files
 
 ```
-setup.sql                    builds the whole database (runs the files below in order)
 tables/table_creation.sql    all the tables and the song_details view
 data/data_inserts.sql        hand-entered songs, demo users, playlists, likes, plays
 data/load_spotify_data.sql   loads the Spotify songs from data/spotify/*.csv
@@ -36,15 +35,15 @@ frontend/                    web pages (plain HTML, CSS, JavaScript)
 ## Building the database
 
 You need `psql`, which comes with [PostgreSQL](https://www.postgresql.org/download/).
-From the repo root:
 
-```
-psql "<DATABASE_URL>" -f setup.sql
-```
+From the repo root run these commands:
+psql "<DATABASE_URL>" -f tables/table_creation.sql
+psql "<DATABASE_URL>" -f data/load_spotify_data.sql
+psql "<DATABASE_URL>" -f data/demo_users.sql
+psql "<DATABASE_URL>" -f data/generate_activity.sql
 
 `<DATABASE_URL>` is the connection string (for Supabase: Project → Connect →
-"Session pooler"). **This deletes everything already in that database**, so tell the
-team before running it on Supabase.
+"Session pooler").
 
 ## Running the web app
 
@@ -66,7 +65,3 @@ You need **Python 3.11+**.
    uvicorn backend.main:app --reload
    ```
 4. Open **http://localhost:8000**
-
-Use "Viewing as" in the sidebar to switch between the four demo users. The **SQL**
-section at the bottom of each page shows the queries that page ran, and the
-**SQL Console** page runs any query you type (read-only unless you tick "Allow changes").
