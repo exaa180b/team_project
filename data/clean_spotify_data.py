@@ -1,10 +1,63 @@
 """Turn the raw Spotify CSV into one clean CSV per table, ready for \\copy.
 """
 import csv
+from collections import Counter
 from pathlib import Path
 
 OUT = Path("data/spotify")
 SOURCE = Path("data/source/spotify_tracks_pop70.csv")
+
+# Spotify tags songs with ~100 small genres ("alt-rock", "deep-house", "k-pop", ...).
+# We group them into 21 broad genres. Genre ids follow this order (Pop = 1, ...).
+GENRE_MAP = {
+    "Pop": ["pop", "dance", "power-pop", "synth-pop", "mandopop", "cantopop"],
+    "Rock": ["rock", "alt-rock", "alternative", "hard-rock", "grunge", "psych-rock", "garage",
+             "rock-n-roll", "rockabilly", "guitar", "j-rock"],
+    "Hip-Hop": ["hip-hop"],
+    "Electronic": ["electro", "edm", "house", "progressive-house", "deep-house", "chicago-house",
+                   "techno", "trance", "dubstep", "electronic", "idm", "hardstyle", "club", "trip-hop"],
+    "Jazz": ["jazz"],
+    "R&B": ["r-n-b"],
+    "Country": ["country"],
+    "Latin": ["latin", "latino", "reggaeton", "salsa", "pagode", "brazil"],
+    "Metal": ["metal", "metalcore", "hardcore", "death-metal", "industrial"],
+    "Indie": ["indie", "indie-pop"],
+    "Reggae": ["reggae", "dancehall", "dub"],
+    "Punk": ["punk", "punk-rock", "emo", "ska"],
+    "Blues": ["blues"],
+    "Classical": ["classical"],
+    "Disco": ["disco"],
+    "Folk": ["folk", "acoustic", "songwriter", "singer-songwriter"],
+    "J-Pop": ["j-pop", "j-dance"],
+    "K-Pop": ["k-pop"],
+    "Soul": ["soul", "funk", "groove"],
+    "Soundtrack": ["pop-film", "show-tunes", "disney", "anime"],
+    "World": ["afrobeat", "world-music", "indian", "turkish", "malay"],
+}
+# Mood and country tags. Only used when a song has no real genre tag.
+BACKUP_MAP = {
+    "Pop": ["sad", "chill", "party", "piano", "comedy", "children", "german", "swedish", "french"],
+    "Rock": ["british"],
+    "Electronic": ["ambient"],
+    "Latin": ["spanish"],
+    "Classical": ["sleep", "new-age"],
+}
+TAG_TO_GENRE = {tag: genre for genre, tags in GENRE_MAP.items() for tag in tags}
+BACKUP_TAG_TO_GENRE = {tag: genre for genre, tags in BACKUP_MAP.items() for tag in tags}
+
+
+def pick_genres(tags):
+    """Up to 2 broad genres: the ones most of the song's tags point to."""
+    # Spotify tags a lot of reggaeton as "reggae", so ignore it on Latin songs.
+    if "reggae" in tags and {"latin", "latino", "reggaeton"} & set(tags):
+        tags = [t for t in tags if t != "reggae"]
+    for tag in tags:
+        if tag not in TAG_TO_GENRE and tag not in BACKUP_TAG_TO_GENRE:
+            raise ValueError(f"No genre for Spotify tag {tag!r}; add it to GENRE_MAP")
+    counts = Counter(TAG_TO_GENRE[t] for t in tags if t in TAG_TO_GENRE)
+    if not counts:
+        counts = Counter(BACKUP_TAG_TO_GENRE[t] for t in tags)
+    return sorted(counts, key=lambda genre: (-counts[genre], genre))[:2]
 
 
 def write_csv(name, header, rows):
@@ -22,8 +75,7 @@ def main():
     for t in tracks:
         names = [n.strip() for n in t["artists"].split(";") if n.strip()]
         t["artist_names"] = list(dict.fromkeys(names))  # keep order, drop dupes
-        # raw Spotify tags, at most 2
-        t["genres"] = [g.strip() for g in t["genres"].split(";") if g.strip()][:2]
+        t["genres"] = pick_genres([g.strip() for g in t["genres"].split(";") if g.strip()])
 
     artist_ids = {}
     for i, name in enumerate(
@@ -42,9 +94,7 @@ def main():
     for i, t in enumerate(tracks, start=1):
         t["song_id"] = i
 
-    genre_ids = {}
-    for i, name in enumerate(sorted({g for t in tracks for g in t["genres"]}), start=1):
-        genre_ids[name] = i
+    genre_ids = {name: i for i, name in enumerate(GENRE_MAP, start=1)}
 
     OUT.mkdir(exist_ok=True)
     write_csv(

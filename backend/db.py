@@ -1,11 +1,5 @@
-"""Database access: one shared connection pool and a helper for running SQL.
-
-Every query a request runs is recorded (SQL text, parameters, time in ms) so the
-frontend's SQL panel can show exactly what the database did.
-"""
+"""Database access: one shared connection pool and a helper for running SQL."""
 import os
-import textwrap
-import time
 
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
@@ -22,19 +16,12 @@ pool = ConnectionPool(
 )
 
 
-def run(conn, log, sql, params=None):
+def run(conn, sql, params=None):
     """Run one SQL statement and return its rows (an empty list if it returns none).
 
     Always pass values through `params` (written as %(name)s in the SQL), never by
     building the SQL string yourself. psycopg sends them separately from the SQL,
     which is what prevents SQL injection.
     """
-    start = time.perf_counter()
     cur = conn.execute(sql, params)
-    rows = cur.fetchall() if cur.description else []
-    log.append({
-        "sql": textwrap.dedent(sql).strip(),
-        "params": params or {},
-        "ms": round((time.perf_counter() - start) * 1000, 1),
-    })
-    return rows
+    return cur.fetchall() if cur.description else []

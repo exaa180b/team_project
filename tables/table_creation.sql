@@ -129,3 +129,26 @@ SELECT s.song_id,
         WHERE sa.song_id = s.song_id) AS artists
 FROM song s
 JOIN album al ON al.album_id = s.album_id;
+
+
+-- =========================================================
+-- Triggers
+-- =========================================================
+
+-- A playlist's owner can't also be one of its collaborators. A CHECK constraint
+-- can't enforce this because the owner is stored in another table (playlist),
+-- so a trigger checks it every time a collaborator is added or changed.
+CREATE OR REPLACE FUNCTION block_owner_as_collaborator() RETURNS trigger AS $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM playlist
+               WHERE playlist_id = NEW.playlist_id AND user_id = NEW.user_id) THEN
+        RAISE EXCEPTION 'User % already owns playlist %, so they can''t be a collaborator on it',
+            NEW.user_id, NEW.playlist_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER no_owner_as_collaborator
+BEFORE INSERT OR UPDATE ON playlist_collaborator
+FOR EACH ROW EXECUTE FUNCTION block_owner_as_collaborator();

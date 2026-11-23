@@ -1,4 +1,4 @@
-// Shared code for every page: API calls, the "Viewing as" picker, the SQL panel,
+// Shared code for every page: API calls, the "Viewing as" picker,
 // track rows and formatting helpers.
 
 // ---------- Current user ----------
@@ -9,7 +9,7 @@ function currentUserId() {
 
 async function setupUserPicker() {
   const select = document.getElementById("user-select");
-  const users = await api("GET", "/users", null, { log: false });
+  const users = await api("GET", "/users");
   select.innerHTML = users
     .map(u => `<option value="${u.user_id}">${esc(u.username)}</option>`)
     .join("");
@@ -22,8 +22,8 @@ async function setupUserPicker() {
 
 // ---------- API ----------
 
-// Calls the backend. Returns the response's "data", and adds its SQL to the SQL panel.
-async function api(method, path, body = null, { log = true } = {}) {
+// Calls the backend and returns the response's "data".
+async function api(method, path, body = null) {
   const response = await fetch("/api" + path, {
     method,
     headers: { "Content-Type": "application/json", "X-User-Id": currentUserId() },

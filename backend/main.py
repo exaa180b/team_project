@@ -4,8 +4,7 @@ Run from the repo root:
     uvicorn backend.main:app --reload
 then open http://localhost:8000
 
-Every endpoint returns {"data": ..., "queries": [...]}. "queries" lists the SQL the
-request ran, for the SQL panel at the bottom of each page.
+Every endpoint returns {"data": ...}.
 
 Each request uses one connection from the pool inside `with db.pool.connection()`.
 That block is a single transaction: it commits at the end, or rolls back if anything
@@ -19,6 +18,7 @@ from pathlib import Path
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.staticfiles import StaticFiles
 from psycopg import errors
+from psycopg.pq import TransactionStatus
 from psycopg.rows import tuple_row
 from pydantic import BaseModel, Field
 
@@ -52,16 +52,15 @@ class PlaylistIn(BaseModel):
 
 @app.get("/api/users")
 def list_demo_users():
-    log = []
     with db.pool.connection() as conn:
         # Users 1-4 are the hand-made demo accounts from data/data_inserts.sql.
-        users = db.run(conn, log, """
+        users = db.run(conn, """
             SELECT user_id, username
             FROM app_user
             WHERE user_id <= 4
             ORDER BY user_id
         """)
-    return {"data": users, "queries": log}
+    return {"data": users}
 
 
 # ---------------------------------------------------------------------------
@@ -70,10 +69,9 @@ def list_demo_users():
 
 @app.get("/api/home")
 def home(user_id: UserId = 1):
-    log = []
     params = {"user_id": user_id}
     with db.pool.connection() as conn:
-        recent = db.run(conn, log, """
+        recent = db.run(conn, """
             SELECT h.played_at, d.song_id, d.song_title, d.artists, d.album_title
             FROM listening_history h
             JOIN song_details d ON d.song_id = h.song_id
@@ -84,7 +82,7 @@ def home(user_id: UserId = 1):
 
         # "Last 30 days" ends at the user's latest play (the generated data stops
         # at 2026-10-01, so counting back from today would find nothing).
-        stats = db.run(conn, log, """
+        stats = db.run(conn, """
             SELECT count(*) AS plays,
                    coalesce(sum(s.duration_ms), 0) / 60000 AS minutes
             FROM listening_history h
@@ -94,7 +92,7 @@ def home(user_id: UserId = 1):
                                  WHERE user_id = %(user_id)s) - interval '30 days'
         """, params)[0]
 
-        top_artists = db.run(conn, log, """
+        top_artists = db.run(conn, """
             SELECT a.artist_id, a.artist_name, count(*) AS plays
             FROM listening_history h
             JOIN song_artist sa ON sa.song_id = h.song_id
@@ -108,7 +106,7 @@ def home(user_id: UserId = 1):
         """, params)
 
         # Playlists the user owns or collaborates on, newest first.
-        playlists = db.run(conn, log, """
+        playlists = db.run(conn, """
             SELECT p.playlist_id,
                    p.playlist_name,
                    u.username AS owner,
@@ -124,16 +122,16 @@ def home(user_id: UserId = 1):
         """, params)
 
     data = {"recent": recent, "stats": stats, "top_artists": top_artists, "playlists": playlists}
-    return {"data": data, "queries": log}
+    return {"data": data}
 
 
 # ---------------------------------------------------------------------------
 # Playlists
 # ---------------------------------------------------------------------------
 
-def get_access(conn, log, playlist_id, user_id):
+def get_access(conn, playlist_id, user_id):
     """Return (is_owner, is_collaborator) for a playlist, or raise 404."""
-    rows = db.run(conn, log, """
+    rows = db.run(conn, """
         SELECT p.user_id = %(user_id)s AS is_owner,
                EXISTS (SELECT 1 FROM playlist_collaborator pc
                        WHERE pc.playlist_id = p.playlist_id
@@ -146,24 +144,23 @@ def get_access(conn, log, playlist_id, user_id):
     return rows[0]["is_owner"], rows[0]["is_collaborator"]
 
 
-def require_editor(conn, log, playlist_id, user_id):
-    is_owner, is_collaborator = get_access(conn, log, playlist_id, user_id)
+def require_editor(conn, playlist_id, user_id):
+    is_owner, is_collaborator = get_access(conn, playlist_id, user_id)
     if not (is_owner or is_collaborator):
         raise HTTPException(403, "Only the owner or a collaborator can change this playlist")
 
 
-def require_owner(conn, log, playlist_id, user_id):
-    is_owner, _ = get_access(conn, log, playlist_id, user_id)
+def require_owner(conn, playlist_id, user_id):
+    is_owner, _ = get_access(conn, playlist_id, user_id)
     if not is_owner:
         raise HTTPException(403, "Only the owner can do that")
 
 
 @app.get("/api/playlists/{playlist_id}")
 def get_playlist(playlist_id: int, user_id: UserId = 1):
-    log = []
     params = {"playlist_id": playlist_id, "user_id": user_id}
     with db.pool.connection() as conn:
-        rows = db.run(conn, log, """
+        rows = db.run(conn, """
             SELECT p.playlist_id, p.playlist_name, p.description, p.created_at,
                    p.user_id AS owner_id, u.username AS owner
             FROM playlist p
@@ -174,7 +171,7 @@ def get_playlist(playlist_id: int, user_id: UserId = 1):
             raise HTTPException(404, "Playlist not found")
         playlist = rows[0]
 
-        collaborators = db.run(conn, log, """
+        collaborators = db.run(conn, """
             SELECT u.user_id, u.username
             FROM playlist_collaborator pc
             JOIN app_user u ON u.user_id = pc.user_id
@@ -182,7 +179,7 @@ def get_playlist(playlist_id: int, user_id: UserId = 1):
             ORDER BY pc.added_at
         """, params)
 
-        songs = db.run(conn, log, """
+        songs = db.run(conn, """
             SELECT d.song_id, d.song_title, d.artists, d.album_title,
                    d.duration_ms, ps.added_at,
                    EXISTS (SELECT 1 FROM liked_song l
@@ -202,7 +199,7 @@ def get_playlist(playlist_id: int, user_id: UserId = 1):
         is_owner=is_owner,
         can_edit=is_owner or is_collaborator,
     )
-    return {"data": playlist, "queries": log}
+    return {"data": playlist}
 
 
 @app.post("/api/playlists", status_code=201)
@@ -210,14 +207,13 @@ def create_playlist(body: PlaylistIn, user_id: UserId = 1):
     name = body.name.strip()
     if not name:
         raise HTTPException(400, "Playlist name can't be empty")
-    log = []
     with db.pool.connection() as conn:
-        rows = db.run(conn, log, """
+        rows = db.run(conn, """
             INSERT INTO playlist (user_id, playlist_name, description)
             VALUES (%(user_id)s, %(name)s, %(description)s)
             RETURNING playlist_id
         """, {"user_id": user_id, "name": name, "description": body.description or None})
-    return {"data": rows[0], "queries": log}
+    return {"data": rows[0]}
 
 
 @app.patch("/api/playlists/{playlist_id}")
@@ -225,42 +221,39 @@ def update_playlist(playlist_id: int, body: PlaylistIn, user_id: UserId = 1):
     name = body.name.strip()
     if not name:
         raise HTTPException(400, "Playlist name can't be empty")
-    log = []
     with db.pool.connection() as conn:
-        require_owner(conn, log, playlist_id, user_id)
-        db.run(conn, log, """
+        require_owner(conn, playlist_id, user_id)
+        db.run(conn, """
             UPDATE playlist
             SET playlist_name = %(name)s,
                 description = %(description)s
             WHERE playlist_id = %(playlist_id)s
         """, {"playlist_id": playlist_id, "name": name, "description": body.description or None})
-    return {"data": {"playlist_id": playlist_id}, "queries": log}
+    return {"data": {"playlist_id": playlist_id}}
 
 
 @app.delete("/api/playlists/{playlist_id}")
 def delete_playlist(playlist_id: int, user_id: UserId = 1):
-    log = []
     with db.pool.connection() as conn:
-        require_owner(conn, log, playlist_id, user_id)
+        require_owner(conn, playlist_id, user_id)
         # playlist_song and playlist_collaborator rows go too (ON DELETE CASCADE).
-        db.run(conn, log, "DELETE FROM playlist WHERE playlist_id = %(playlist_id)s",
+        db.run(conn, "DELETE FROM playlist WHERE playlist_id = %(playlist_id)s",
                {"playlist_id": playlist_id})
-    return {"data": {"playlist_id": playlist_id}, "queries": log}
+    return {"data": {"playlist_id": playlist_id}}
 
 
 @app.delete("/api/playlists/{playlist_id}/songs/{song_id}")
 def remove_song_from_playlist(playlist_id: int, song_id: int, user_id: UserId = 1):
-    log = []
     with db.pool.connection() as conn:
-        require_editor(conn, log, playlist_id, user_id)
-        rows = db.run(conn, log, """
+        require_editor(conn, playlist_id, user_id)
+        rows = db.run(conn, """
             DELETE FROM playlist_song
             WHERE playlist_id = %(playlist_id)s AND song_id = %(song_id)s
             RETURNING song_id
         """, {"playlist_id": playlist_id, "song_id": song_id})
         if not rows:
             raise HTTPException(404, "That song isn't in this playlist")
-    return {"data": {"playlist_id": playlist_id, "song_id": song_id}, "queries": log}
+    return {"data": {"playlist_id": playlist_id, "song_id": song_id}}
 
 
 # ---------------------------------------------------------------------------
@@ -269,28 +262,26 @@ def remove_song_from_playlist(playlist_id: int, song_id: int, user_id: UserId = 
 
 @app.post("/api/songs/{song_id}/like")
 def like_song(song_id: int, user_id: UserId = 1):
-    log = []
     with db.pool.connection() as conn:
         try:
-            db.run(conn, log, """
+            db.run(conn, """
                 INSERT INTO liked_song (user_id, song_id)
                 VALUES (%(user_id)s, %(song_id)s)
                 ON CONFLICT DO NOTHING
             """, {"user_id": user_id, "song_id": song_id})
         except errors.ForeignKeyViolation:
             raise HTTPException(404, "Song not found")
-    return {"data": {"song_id": song_id, "liked": True}, "queries": log}
+    return {"data": {"song_id": song_id, "liked": True}}
 
 
 @app.delete("/api/songs/{song_id}/like")
 def unlike_song(song_id: int, user_id: UserId = 1):
-    log = []
     with db.pool.connection() as conn:
-        db.run(conn, log, """
+        db.run(conn, """
             DELETE FROM liked_song
             WHERE user_id = %(user_id)s AND song_id = %(song_id)s
         """, {"user_id": user_id, "song_id": song_id})
-    return {"data": {"song_id": song_id, "liked": False}, "queries": log}
+    return {"data": {"song_id": song_id, "liked": False}}
 
 
 # ---------------------------------------------------------------------------
@@ -306,19 +297,25 @@ class QueryIn(BaseModel):
 def run_sql(body: QueryIn):
     """Run whatever SQL is typed on the SQL console page and return every result.
 
+    Works like psql: each statement commits on its own unless the SQL has its own
+    BEGIN ... COMMIT (so BEGIN ISOLATION LEVEL ... works for the transaction demos).
     Read-only unless "Allow changes" is ticked, so a demo can't break the data by
-    accident. Several statements separated by ; are fine. Each result shows at most
-    500 rows, and anything slower than 30 seconds is cancelled.
+    accident. Each result shows at most 500 rows, and anything slower than 30 seconds
+    is cancelled. A transaction left open at the end is rolled back.
     """
     results = []
     with db.pool.connection() as conn:
-        if not body.allow_changes:
-            conn.execute("SET TRANSACTION READ ONLY")
-        conn.execute("SET LOCAL statement_timeout = '30s'")
-        cur = conn.cursor(row_factory=tuple_row)   # tuples, so repeated column names are kept
-        start = time.perf_counter()
+        conn.autocommit = True
         try:
-            cur.execute(body.sql)
+            conn.execute("SET statement_timeout = '30s'")
+            if not body.allow_changes:
+                conn.execute("SET default_transaction_read_only = on")
+            cur = conn.cursor(row_factory=tuple_row)   # tuples, so repeated column names are kept
+            start = time.perf_counter()
+            try:
+                cur.execute(body.sql)
+            except errors.Error as e:
+                raise HTTPException(400, str(e).strip())
             ms = round((time.perf_counter() - start) * 1000, 1)
             while True:
                 result = {"status": cur.statusmessage, "columns": None, "rows": [], "truncated": False}
@@ -330,9 +327,13 @@ def run_sql(body: QueryIn):
                 results.append(result)
                 if not cur.nextset():
                     break
-        except errors.Error as e:
-            raise HTTPException(400, str(e).strip())
-    return {"data": {"results": results, "ms": ms}, "queries": []}
+        finally:
+            # Put the pooled connection back the way we found it.
+            if conn.info.transaction_status != TransactionStatus.IDLE:
+                conn.execute("ROLLBACK")
+            conn.execute("RESET ALL")
+            conn.autocommit = False
+    return {"data": {"results": results, "ms": ms}}
 
 
 # The frontend (plain HTML/CSS/JS) is served from the same server, so there's
