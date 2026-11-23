@@ -12,7 +12,8 @@ raises (including the HTTPExceptions below), so a request never half-applies.
 """
 import time
 from contextlib import asynccontextmanager
-from typing import Annotated
+from typing import Optional
+from typing_extensions import Annotated
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException
@@ -43,7 +44,7 @@ UserId = Annotated[int, Header(alias="X-User-Id")]
 
 class PlaylistIn(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    description: str | None = Field(default=None, max_length=300)
+    description: Optional[str] = Field(default=None, max_length=300)
 
 
 # ---------------------------------------------------------------------------
