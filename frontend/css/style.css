@@ -159,21 +159,6 @@ input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px s
 .playlist-header .meta { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
 .playlist-header .buttons { display: flex; gap: 8px; margin-top: 14px; }
 
-/* ---------- SQL panel ---------- */
-
-.sql-panel { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 16px; }
-.sql-entry { margin-top: 14px; }
-.sql-entry .sql-meta { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.sql-entry pre {
-  margin: 0;
-  padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  font: 12px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace;
-  overflow-x: auto;
-}
-
 /* ---------- SQL Console page ---------- */
 
 .sql-form { display: flex; flex-direction: column; gap: 10px; }

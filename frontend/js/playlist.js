@@ -5,7 +5,6 @@ const editForm = document.getElementById("edit-form");
 let playlist;
 
 async function loadPlaylist() {
-  clearSqlPanel();
   playlist = await api("GET", `/playlists/${playlistId}`);
   document.title = `${playlist.playlist_name} · EXAAtunes`;
 

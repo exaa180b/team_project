@@ -30,40 +30,11 @@ async function api(method, path, body = null, { log = true } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const json = await response.json().catch(() => ({}));
-  if (log && json.queries) logQueries(json.queries);
   if (!response.ok) {
     const detail = typeof json.detail === "string" ? json.detail : "Something went wrong";
     throw new Error(detail);
   }
   return json.data;
-}
-
-// ---------- SQL panel ----------
-
-let sqlLog = [];
-
-function clearSqlPanel() {
-  sqlLog = [];
-  renderSqlPanel();
-}
-
-function logQueries(queries) {
-  sqlLog.push(...queries);
-  renderSqlPanel();
-}
-
-function renderSqlPanel() {
-  const panel = document.getElementById("sql-panel");
-  if (!panel) return;
-  const totalMs = sqlLog.reduce((sum, q) => sum + q.ms, 0);
-  const plural = sqlLog.length === 1 ? "query" : "queries";
-  panel.querySelector(".sql-summary").textContent =
-    `· ${sqlLog.length} ${plural} · ${totalMs.toFixed(1)} ms`;
-  panel.querySelector(".sql-list").innerHTML = sqlLog.map(q => `
-    <div class="sql-entry">
-      <div class="sql-meta">${q.ms.toFixed(1)} ms${Object.keys(q.params).length ? " · params " + esc(JSON.stringify(q.params)) : ""}</div>
-      <pre>${esc(q.sql)}</pre>
-    </div>`).join("");
 }
 
 // ---------- Rendering helpers ----------

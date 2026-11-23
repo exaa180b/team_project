@@ -1,7 +1,6 @@
 // Home page: recently played, top artists, playlists.
 
 async function loadHome() {
-  clearSqlPanel();
   const data = await api("GET", "/home");
 
   const hours = Math.round(data.stats.minutes / 60);
