@@ -284,6 +284,37 @@ def unlike_song(song_id: int, user_id: UserId = 1):
         """, {"user_id": user_id, "song_id": song_id})
     return {"data": {"song_id": song_id, "liked": False}}
 
+# a play button to make it so that the history is updated when a song is played
+@app.post("/api/songs/{song_id}/play", status_code=201)
+def play_song(song_id: int, user_id: UserId = 1):
+    with db.pool.connection() as conn:
+        try:
+            rows = db.run(conn, """
+                INSERT INTO listening_history (user_id, song_id, played_at)
+                VALUES (%(user_id)s, %(song_id)s, now())
+                RETURNING history_id, played_at, song_id
+            """, {"user_id": user_id, "song_id": song_id})
+        except errors.ForeignKeyViolation:
+            raise HTTPException(404, "Song not found")
+    return {"data": rows[0]}
+
+# a search function
+@app.get("/api/songs")
+def search_songs(q: str = ""):
+    q = q.strip()
+    if not q:
+        return {"data": []}
+    with db.pool.connection() as conn:
+        rows = db.run(conn, """
+            SELECT song_id, song_title, artists, album_title, duration_ms
+            FROM song_details
+            WHERE song_title ILIKE %(q)s
+                OR artists ILIKE %(q)s
+                OR album_title ILIKE %(q)s
+            ORDER BY song_title
+            LIMIT 25
+        """, {"q": f"%{q}%"})
+    return {"data": rows}
 
 # ---------------------------------------------------------------------------
 # SQL console (for demos)

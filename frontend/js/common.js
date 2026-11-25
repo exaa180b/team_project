@@ -56,6 +56,10 @@ function likeButton(song) {
             ${song.liked ? HEART_ICON : HEART_OUTLINE_ICON}</button>`;
 }
 
+function playButton(song) {
+  return `<button type="button" class="icon-button" data-action="play"
+            data-song-id="${song.song_id}" title="Play">Play</button>`;
+}
 // One row of a track list. `meta` is the small text on the right (a time or duration),
 // `actions` is extra HTML for buttons, `number` shows a position number.
 function trackRow(song, { meta = "", actions = "", number = null } = {}) {
@@ -83,6 +87,21 @@ document.addEventListener("click", async event => {
     button.setAttribute("aria-pressed", String(!liked));
     button.title = liked ? "Like" : "Unlike";
     button.innerHTML = liked ? HEART_OUTLINE_ICON : HEART_ICON;
+  } catch (error) {
+    showMessage(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.addEventListener("click", async event => {
+  const button = event.target.closest('[data-action="play"]');
+  if (!button) return;
+  button.disabled = true;
+  try {
+    await api("POST", `/songs/${button.dataset.songId}/play`);
+    showMessage("Played");
+    if (typeof loadHome === "function") await loadHome();
   } catch (error) {
     showMessage(error.message, true);
   } finally {

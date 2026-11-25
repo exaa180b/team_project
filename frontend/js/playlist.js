@@ -31,7 +31,7 @@ async function loadPlaylist() {
     ? playlist.songs.map((song, i) => trackRow(song, {
         number: i + 1,
         meta: `<span class="added">${formatDate(song.added_at)}</span> · ${formatDuration(song.duration_ms)}`,
-        actions: likeButton(song) + (playlist.can_edit
+        actions: playButton(song) + likeButton(song) + (playlist.can_edit
           ? `<button class="icon-button" data-action="remove" data-song-id="${song.song_id}"
                      title="Remove from playlist">${REMOVE_ICON}</button>`
           : ""),

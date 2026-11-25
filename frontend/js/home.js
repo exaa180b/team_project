@@ -8,7 +8,7 @@ async function loadHome() {
     `${data.stats.plays.toLocaleString()} plays and ${hours} hours of listening in the last 30 days`;
 
   document.getElementById("recent").innerHTML = data.recent.length
-    ? data.recent.map(song => trackRow(song, { meta: formatDateTime(song.played_at) })).join("")
+    ? data.recent.map(song => trackRow(song, {meta: formatDateTime(song.played_at), actions: playButton(song),}))
     : `<li class="empty">Nothing played yet.</li>`;
 
   document.getElementById("top-artists").innerHTML = data.top_artists.length
@@ -32,6 +32,28 @@ function renderPlaylists(playlists) {
         </li>`).join("")
     : `<li class="empty">No playlists yet.</li>`;
 }
+
+// a search function to search for songs
+document.getElementById("search-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const q = document.getElementById("search-q").value.trim();
+  const box = document.getElementById("search-results");
+  if (!q) {
+    box.innerHTML = "";
+    return;
+  }
+  try {
+    const songs = await api("GET", `/songs?q=${encodeURIComponent(q)}`);
+    box.innerHTML = songs.length
+      ? songs.map(song => trackRow(song, {
+          meta: formatDuration(song.duration_ms),
+          actions: playButton(song),
+        })).join("")
+      : `<li class="empty">No songs found.</li>`;
+  } catch (error) {
+    showMessage(error.message, true);
+  }
+});
 
 // ---------- New playlist ----------
 

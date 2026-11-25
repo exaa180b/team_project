@@ -23,6 +23,15 @@
     </header>
 
     <section>
+      <h2>Search songs</h2>
+      <form id="search-form" class="inline-form">
+        <input type="text" id="search-q" name="q" placeholder="Title, artist, or album" maxlength="100">
+        <button type="submit" class="primary">Search</button>
+      </form>
+      <ol id="search-results" class="track-list"></ol>
+    </section>
+    
+    <section>
       <h2>Recently played</h2>
       <ol id="recent" class="track-list"></ol>
     </section>
